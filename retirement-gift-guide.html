@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>爸爸退休禮物指南</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1610;
+    --paper: #f5f0e8;
+    --warm: #c8956c;
+    --gold: #b8923a;
+    --sage: #7a9e7e;
+    --mist: #e8e0d0;
+    --deep: #3d3228;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Serif TC', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle paper texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 60px 32px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 64px;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  .header .eyebrow {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--warm);
+    letter-spacing: 0.2em;
+    margin-bottom: 12px;
+  }
+
+  .header h1 {
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-weight: 300;
+    line-height: 1.2;
+    color: var(--deep);
+    margin-bottom: 16px;
+  }
+
+  .header h1 span {
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  .header .subtitle {
+    font-size: 0.9rem;
+    color: #7a6e60;
+    letter-spacing: 0.05em;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 32px 0;
+  }
+
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+  }
+
+  .divider-icon {
+    font-size: 1.2rem;
+    color: var(--gold);
+  }
+
+  /* Budget badge */
+  .budget-badge {
+    display: inline-block;
+    background: var(--deep);
+    color: var(--paper);
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    padding: 6px 18px;
+    border-radius: 20px;
+    margin-bottom: 48px;
+  }
+
+  /* Gift cards grid */
+  .gifts-grid {
+    display: grid;
+    gap: 24px;
+  }
+
+  .gift-card {
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeUp 0.6s ease both;
+    cursor: default;
+  }
+
+  .gift-card:nth-child(1) { animation-delay: 0.1s; }
+  .gift-card:nth-child(2) { animation-delay: 0.2s; }
+  .gift-card:nth-child(3) { animation-delay: 0.3s; }
+  .gift-card:nth-child(4) { animation-delay: 0.4s; }
+  .gift-card:nth-child(5) { animation-delay: 0.5s; }
+  .gift-card:nth-child(6) { animation-delay: 0.6s; }
+
+  .gift-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .gift-icon-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    padding: 24px 12px;
+  }
+
+  .gift-body {
+    padding: 22px 24px 22px 0;
+    border-left: 1px solid var(--mist);
+  }
+
+  .gift-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .gift-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--deep);
+    line-height: 1.3;
+  }
+
+  .gift-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem;
+    color: var(--gold);
+    font-weight: 400;
+    white-space: nowrap;
+    padding-top: 2px;
+  }
+
+  .gift-desc {
+    font-size: 0.85rem;
+    color: #6b5f52;
+    line-height: 1.65;
+    margin-bottom: 12px;
+  }
+
+  .gift-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tag {
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: var(--mist);
+    color: var(--deep);
+  }
+
+  .tag.highlight {
+    background: var(--sage);
+    color: white;
+  }
+
+  /* Color accents per card */
+  .gift-card:nth-child(1) .gift-icon-col { background: #fdf3ec; }
+  .gift-card:nth-child(2) .gift-icon-col { background: #f0f5f0; }
+  .gift-card:nth-child(3) .gift-icon-col { background: #f5f0fa; }
+  .gift-card:nth-child(4) .gift-icon-col { background: #fdf7ec; }
+  .gift-card:nth-child(5) .gift-icon-col { background: #edf4f8; }
+  .gift-card:nth-child(6) .gift-icon-col { background: #fdf0f0; }
+
+  /* Footer tip */
+  .footer-tip {
+    margin-top: 56px;
+    padding: 28px 32px;
+    background: var(--deep);
+    border-radius: 4px;
+    color: var(--paper);
+    animation: fadeUp 0.6s 0.8s ease both;
+  }
+
+  .footer-tip .tip-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--warm);
+    margin-bottom: 8px;
+  }
+
+  .footer-tip p {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    opacity: 0.85;
+  }
+
+  .footer-tip strong {
+    color: var(--warm);
+    font-weight: 600;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 520px) {
+    .gift-card { grid-template-columns: 70px 1fr; }
+    .gift-icon-col { font-size: 1.8rem; }
+    .gift-body { padding: 16px 16px 16px 0; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="eyebrow">A gift guide for</div>
+    <h1>爸爸的<span>退休禮物</span></h1>
+    <p class="subtitle">放鬆 · 身心健康 · 新生活的開始</p>
+  </div>
+
+  <div style="text-align:center">
+    <div class="budget-badge">預算 $25 – $75 USD</div>
+  </div>
+
+  <div class="divider"><span class="divider-icon">✦</span></div>
+
+  <div class="gifts-grid">
+
+    <div class="gift-card">
+      <div class="gift-icon-col">🍵</div>
+      <div class="gift-body">
+        <div class="gift-header">
+          <div class="gift-name">精品茶葉禮盒</div>
+          <div class="gift-price">$30 – $55</div>
+        </div>
+        <p class="gift-desc">一套精選台灣高山茶或日式抹茶組合，附精美木盒包裝。退休後午後慢慢品茶，是最好的享受。</p>
+        <div class="gift-tags">
+          <span class="tag highlight">最受歡迎</span>
+          <span class="tag">日常享受</span>
+          <span class="tag">台灣本地</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="gift-card">
+      <div class="gift-icon-col">🧘</div>
+      <div class="gift-body">
+        <div class="gift-header">
+          <div class="gift-name">穴位按摩工具組</div>
+          <div class="gift-price">$25 – $50</div>
+        </div>
+        <p class="gift-desc">含按摩滾輪、指壓棒、足部按摩板的套組，隨時可在家放鬆筋骨，舒緩多年工作的疲憊。</p>
+        <div class="gift-tags">
+          <span class="tag">每天實用</span>
+          <span class="tag">舒緩疼痛</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="gift-card">
+      <div class="gift-icon-col">🛁</div>
+      <div class="gift-body">
+        <div class="gift-header">
+          <div class="gift-name">沐浴 & 保養禮籃</div>
+          <div class="gift-price">$40 – $65</div>
+        </div>
+        <p class="gift-desc">高品質沐浴鹽、精油、保濕乳液組合，讓爸爸在家就能享受SPA等級的放鬆體驗。</p>
+        <div class="gift-tags">
+          <span class="tag">適合中年</span>
+          <span class="tag">高質感</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="gift-card">
+      <div class="gift-icon-col">📖</div>
+      <div class="gift-body">
+        <div class="gift-header">
+          <div class="gift-name">個人化退休紀念冊</div>
+          <div class="gift-price">$35 – $60</div>
+        </div>
+        <p class="gift-desc">將家人的照片、留言、祝福話語製作成精裝相冊，是最有溫度的禮物，也是一生珍藏的回憶。</p>
+        <div class="gift-tags">
+          <span class="tag highlight">最有意義</span>
+          <span class="tag">獨一無二</span>
+          <span class="tag">全家參與</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="gift-card">
+      <div class="gift-icon-col">🎧</div>
+      <div class="gift-body">
+        <div class="gift-header">
+          <div class="gift-name">無線藍牙耳機</div>
+          <div class="gift-price">$40 – $70</div>
+        </div>
+        <p class="gift-desc">入門級降噪耳機，讓爸爸可以自在欣賞音樂、廣播或有聲書，享受退休後的寧靜時光。</p>
+        <div class="gift-tags">
+          <span class="tag">科技感</span>
+          <span class="tag">日常使用</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="gift-card">
+      <div class="gift-icon-col">🌿</div>
+      <div class="gift-body">
+        <div class="gift-header">
+          <div class="gift-name">室內植栽組合</div>
+          <div class="gift-price">$25 – $50</div>
+        </div>
+        <p class="gift-desc">幾盆好照顧的多肉植物或香草盆栽（如薄荷、迷迭香），培育生命、淨化空氣，退休生活添生機。</p>
+        <div class="gift-tags">
+          <span class="tag">療癒系</span>
+          <span class="tag">居家布置</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-tip">
+    <div class="tip-label">💡 GIFT WRAPPING TIP</div>
+    <p>送禮時附上一張手寫卡片，寫下對爸爸的感謝與祝福，比任何禮物都更加珍貴。可以請全家人一起簽名，讓爸爸感受到大家的愛。<strong>退休快樂，辛苦了！</strong> 🎉</p>
+  </div>
+
+</div>
+</body>
+</html>
