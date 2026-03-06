@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>我的食譜日記</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  ::-webkit-scrollbar { display: none; }
+  html, body { height: 100%; background: #F0EBE1; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: #F0EBE1;
+    display: flex;
+    justify-content: center;
+  }
+
+  #app {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    background: #F9F5EF;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ── typography ── */
+  .playfair { font-family: 'Playfair Display', serif; }
+  .label-sm {
+    font-size: 10px; letter-spacing: 2.5px;
+    color: #B0A090; text-transform: uppercase;
+    display: block; margin-bottom: 8px;
+  }
+
+  /* ── buttons ── */
+  button { cursor: pointer; font-family: 'Georgia', serif; }
+  .btn-ghost {
+    background: rgba(255,255,255,0.18); border: none;
+    color: #fff; padding: 7px 14px; border-radius: 16px;
+    font-size: 13px;
+  }
+  .btn-dark {
+    background: #241A10; border: none; color: #F9F5EF;
+    padding: 15px; border-radius: 16px; font-size: 15px;
+    font-weight: 700; width: 100%;
+  }
+  .btn-dashed {
+    width: 100%; padding: 13px; border-radius: 14px;
+    border: 2px dashed #C8B89A; background: transparent;
+    color: #9B8878; font-size: 14px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-pill {
+    padding: 7px 16px; border-radius: 20px; border: none;
+    font-size: 13px; white-space: nowrap; flex-shrink: 0;
+    transition: all 0.18s;
+  }
+  .btn-pill.active { background: #241A10; color: #F9F5EF; }
+  .btn-pill.inactive { background: #fff; color: #9B8878; box-shadow: 0 1px 5px rgba(0,0,0,0.07); }
+  .btn-icon {
+    background: #EDE8DF; border: none; width: 28px; height: 28px;
+    border-radius: 8px; font-size: 12px; color: #9B8878;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  }
+  .btn-add-recipe {
+    width: 42px; height: 42px; border-radius: 50%; background: #241A10;
+    border: none; color: #F9F5EF; font-size: 22px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(36,26,16,0.25);
+  }
+  .btn-tab {
+    flex: 0 0 auto; padding: 13px 18px; border: none;
+    background: transparent; font-size: 13px; white-space: nowrap;
+    border-bottom: 2px solid transparent; transition: all 0.15s; color: #B0A090;
+  }
+  .btn-tab.active { color: #241A10; border-bottom-color: #241A10; font-weight: 700; }
+
+  /* ── inputs ── */
+  input, textarea {
+    font-family: 'Georgia', serif; outline: none;
+    border: 1.5px solid #EDE8DF; background: #fff;
+    color: #241A10; border-radius: 10px; font-size: 14px;
+  }
+  input { padding: 9px 12px; }
+  textarea { padding: 9px 12px; resize: none; line-height: 1.6; }
+  .input-full { width: 100%; padding: 12px 14px; border-radius: 12px; }
+
+  /* ── layout helpers ── */
+  .flex { display: flex; }
+  .flex-col { display: flex; flex-direction: column; }
+  .items-center { align-items: center; }
+  .items-start { align-items: flex-start; }
+  .justify-between { justify-content: space-between; }
+  .justify-center { justify-content: center; }
+  .gap-6 { gap: 6px; } .gap-8 { gap: 8px; } .gap-10 { gap: 10px; }
+  .wrap { flex-wrap: wrap; }
+  .overflow-x { overflow-x: auto; }
+  .text-center { text-align: center; }
+  .hidden { display: none !important; }
+
+  /* ── screen ── */
+  .screen { display: none; flex-direction: column; min-height: 100vh; padding-bottom: 40px; }
+  .screen.active { display: flex; }
+
+  /* ── header ── */
+  .page-header {
+    padding: 52px 22px 16px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .header-eyebrow { font-size: 10px; letter-spacing: 3px; color: #B0A090; text-transform: uppercase; margin-bottom: 4px; }
+  .header-title { font-size: 28px; font-weight: 700; color: #241A10; line-height: 1.2; }
+
+  /* ── filter bar ── */
+  .filter-bar { display: flex; gap: 8px; padding: 0 22px 18px; overflow-x: auto; }
+
+  /* ── swipe card wrapper ── */
+  .swipe-wrapper {
+    position: relative; overflow: hidden; border-radius: 18px; margin-bottom: 14px;
+  }
+  .swipe-actions {
+    position: absolute; inset: 0; display: flex;
+    justify-content: space-between; border-radius: 18px;
+  }
+  .swipe-action-left {
+    width: 80px; background: #3A6B45; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    border-radius: 18px 0 0 18px; cursor: pointer;
+  }
+  .swipe-action-right {
+    width: 80px; background: #A03020; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    border-radius: 0 18px 18px 0; cursor: pointer;
+  }
+  .swipe-action-label { font-size: 10px; color: #fff; font-weight: 600; }
+  .swipe-card {
+    position: relative; z-index: 1;
+    transition: transform 0.3s cubic-bezier(.2,.8,.3,1);
+    background: #fff; border-radius: 18px; overflow: hidden;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.07); cursor: pointer;
+  }
+
+  /* ── recipe card ── */
+  .card-cover {
+    padding: 20px 20px 16px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .card-cover-emoji { font-size: 46px; }
+  .card-cover-right { text-align: right; }
+  .card-count-badge {
+    background: rgba(255,255,255,0.2); border-radius: 8px;
+    padding: 3px 10px; font-size: 11px; color: #fff;
+  }
+  .card-mood-emoji { font-size: 26px; margin-top: 8px; }
+  .card-mood-label { font-size: 10px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+  .card-body { padding: 14px 18px; }
+  .card-title { font-size: 17px; font-weight: 700; color: #241A10; }
+  .card-cat-badge {
+    font-size: 11px; padding: 3px 10px; border-radius: 10px; font-weight: 600;
+  }
+  .card-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 12px; color: #B0A090; }
+  .card-note { font-size: 13px; color: #9B8878; line-height: 1.55; }
+
+  /* ── detail hero ── */
+  .detail-hero { padding: 52px 22px 20px; }
+  .detail-hero-nav { display: flex; justify-content: space-between; align-items: center; }
+  .detail-emoji { font-size: 44px; margin-top: 14px; }
+  .detail-title { font-size: 22px; font-weight: 700; color: #fff; margin-top: 6px; }
+  .detail-count { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 4px; }
+  .detail-tags { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .detail-tag {
+    font-size: 11px; background: rgba(255,255,255,0.2);
+    color: #fff; padding: 3px 10px; border-radius: 10px;
+  }
+
+  /* ── tabs ── */
+  .tabs-bar {
+    display: flex; background: #fff;
+    border-bottom: 1px solid #EDE8DF; overflow-x: auto;
+  }
+  .tab-content { padding: 20px 22px 60px; }
+
+  /* ── session card ── */
+  .session-card {
+    background: #fff; border-radius: 18px; padding: 18px;
+    margin-bottom: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border-left: 4px solid #EDE8DF; position: relative;
+  }
+  .session-card.latest { /* border-left color set inline via JS */ }
+  .session-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .session-meta { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #B0A090; }
+  .session-badge {
+    font-size: 10px; color: #fff; padding: 2px 8px; border-radius: 8px;
+  }
+  .session-mood { text-align: center; }
+  .session-mood-emoji { font-size: 24px; }
+  .session-mood-label { font-size: 10px; color: #9B8878; }
+  .temp-chips { display: flex; gap: 8px; margin-bottom: 12px; }
+  .temp-chip {
+    flex: 1; background: #F5F0E8; border-radius: 10px;
+    padding: 8px 10px; text-align: center;
+  }
+  .temp-chip-label { font-size: 10px; color: #B0A090; margin-bottom: 2px; }
+  .temp-chip-value { font-size: 16px; font-weight: 700; color: #241A10; }
+  .session-note {
+    font-size: 14px; color: #4A3828; line-height: 1.7;
+    background: #FDFAF5; border-radius: 10px; padding: 12px 14px;
+  }
+  .session-note.empty { color: #C0B0A0; font-style: italic; }
+
+  /* ── edit list ── */
+  .edit-list-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+  }
+  .edit-list-actions { display: flex; gap: 8px; }
+  .btn-sm {
+    font-size: 12px; border: none; padding: 5px 12px;
+    border-radius: 10px; cursor: pointer;
+  }
+  .btn-sm.cancel { background: #EDE8DF; color: #9B8878; }
+  .btn-sm.save { background: #241A10; color: #fff; }
+  .btn-sm.edit-trigger { background: #EDE8DF; color: #9B8878; }
+  .view-list { display: flex; flex-direction: column; gap: 12px; }
+  .view-list-item { padding: 4px 0; border-bottom: 1px solid #F0EBE3; }
+  .view-list-item:last-child { border-bottom: none; }
+  .edit-list-inputs { display: flex; flex-direction: column; gap: 8px; }
+  .edit-row { display: flex; gap: 8px; align-items: center; }
+
+  /* ── step item ── */
+  .step-row { display: flex; gap: 14px; align-items: flex-start; }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .step-text { font-size: 14px; color: #3D2E1E; line-height: 1.7; padding-top: 3px; }
+
+  /* ── ingredient item ── */
+  .ing-row { display: flex; justify-content: space-between; padding: 2px 0; }
+  .ing-name { font-size: 14px; color: #3D2E1E; }
+  .ing-amount { font-size: 14px; color: #9B8878; font-weight: 600; }
+
+  /* ── shopping item ── */
+  .shop-row { display: flex; align-items: center; gap: 12px; }
+  .shop-check { width: 18px; height: 18px; border-radius: 5px; flex-shrink: 0; }
+
+  /* ── sheet overlay ── */
+  .sheet-overlay {
+    position: fixed; inset: 0; background: rgba(16,10,4,0.55);
+    z-index: 200; display: flex; align-items: flex-end;
+    justify-content: center;
+  }
+  .sheet-panel {
+    background: #FAF7F1; border-radius: 22px 22px 0 0;
+    width: 100%; max-width: 430px;
+    max-height: 92vh; display: flex; flex-direction: column;
+    animation: sheetUp 0.32s cubic-bezier(.2,.8,.3,1) forwards;
+  }
+  .sheet-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 22px 16px; border-bottom: 1px solid #EDE8DF; flex-shrink: 0;
+  }
+  .sheet-title { font-size: 18px; font-weight: 700; color: #241A10; }
+  .sheet-close {
+    background: #EDE8DF; border: none; width: 28px; height: 28px;
+    border-radius: 50%; font-size: 15px; color: #9B8878;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sheet-body { overflow-y: auto; flex: 1; padding: 20px 22px 40px; }
+  .sheet-section { margin-bottom: 22px; }
+
+  /* ── mood picker ── */
+  .mood-picker { display: flex; gap: 8px; }
+  .mood-btn {
+    flex: 1; padding: 10px 0; border-radius: 12px; border: none;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    transition: all 0.15s; background: #EDE8DF;
+  }
+  .mood-btn.selected { /* bg set inline */ }
+  .mood-btn-emoji { font-size: 22px; }
+  .mood-btn-label { font-size: 10px; color: #9B8878; }
+  .mood-btn.selected .mood-btn-label { color: #fff; }
+
+  /* ── emoji picker ── */
+  .emoji-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .emoji-btn {
+    width: 40px; height: 40px; border-radius: 10px; border: none;
+    font-size: 22px; background: #EDE8DF; transition: all 0.15s;
+  }
+  .emoji-btn.selected { background: #241A10; }
+
+  /* ── color picker ── */
+  .color-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+  .color-swatch {
+    width: 34px; height: 34px; border-radius: 50%; border: none;
+    outline: none; cursor: pointer; transition: outline 0.15s;
+  }
+  .color-swatch.selected { outline: 3px solid #241A10; outline-offset: 2px; }
+
+  /* ── category picker ── */
+  .cat-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cat-btn {
+    padding: 7px 16px; border-radius: 20px; border: none;
+    font-size: 13px; transition: all 0.15s;
+  }
+  .cat-btn.selected { background: #241A10; color: #fff; }
+  .cat-btn.unselected { background: #EDE8DF; color: #9B8878; }
+
+  /* ── tag input ── */
+  .tag-list { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; min-height: 4px; }
+  .tag-chip {
+    font-size: 12px; background: #F5F0E8; color: #8B7860;
+    padding: 4px 10px; border-radius: 10px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .tag-remove { background: none; border: none; font-size: 12px; color: #B0A090; padding: 0; line-height: 1; }
+  .tag-input-row { display: flex; gap: 8px; }
+  .btn-add-tag {
+    padding: 9px 14px; border-radius: 10px; border: none;
+    background: #241A10; color: #fff; font-size: 13px;
+  }
+
+  /* ── step in add form ── */
+  .step-form-row { display: flex; gap: 8px; align-items: flex-start; }
+  .step-form-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 10px;
+  }
+
+  /* ── env fields ── */
+  .env-fields { display: flex; gap: 10px; }
+  .env-field { flex: 1; }
+  .env-field label { font-size: 10px; color: #B0A090; display: block; margin-bottom: 5px; }
+  .env-field input { width: 100%; text-align: center; padding: 10px 6px; }
+
+  /* ── misc ── */
+  .hint-text { font-size: 11px; color: #C0B0A0; text-align: center; margin-bottom: 12px; }
+  .empty-state { text-align: center; padding: 60px 0; color: #C0B0A0; font-size: 14px; }
+  .dot-sep { color: #D8CFC4; font-size: 12px; }
+
+  /* ── animations ── */
+  @keyframes sheetUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeIn 0.25s ease forwards; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════════ HOME SCREEN ══════════════════ -->
+  <div id="screen-home" class="screen active fade-in">
+    <div class="page-header">
+      <div>
+        <div class="header-eyebrow">Kitchen Journal</div>
+        <div class="playfair header-title">我的食譜</div>
+      </div>
+      <button class="btn-add-recipe" onclick="openAddRecipeSheet()">＋</button>
+    </div>
+
+    <div class="filter-bar" id="filter-bar"></div>
+    <div class="hint-text">← 右滑複製　左滑刪除 →</div>
+    <div style="padding: 0 22px;" id="recipe-list"></div>
+  </div>
+
+  <!-- ══════════════════ DETAIL SCREEN ══════════════════ -->
+  <div id="screen-detail" class="screen">
+    <div id="detail-hero" class="detail-hero">
+      <div class="detail-hero-nav">
+        <button class="btn-ghost" onclick="goHome()">← 返回</button>
+        <button class="btn-ghost" onclick="openEditRecipeSheet()">編輯食譜</button>
+      </div>
+      <div id="detail-emoji" class="detail-emoji"></div>
+      <div id="detail-title" class="playfair detail-title"></div>
+      <div id="detail-count" class="detail-count"></div>
+      <div id="detail-tags" class="detail-tags"></div>
+    </div>
+
+    <div class="tabs-bar" id="tabs-bar">
+      <button class="btn-tab active" data-tab="sessions" onclick="switchTab('sessions',this)">嘗試紀錄</button>
+      <button class="btn-tab" data-tab="steps" onclick="switchTab('steps',this)">步驟</button>
+      <button class="btn-tab" data-tab="ingredients" onclick="switchTab('ingredients',this)">材料</button>
+      <button class="btn-tab" data-tab="shopping" onclick="switchTab('shopping',this)">採購</button>
+    </div>
+
+    <div class="tab-content">
+      <div id="tab-sessions"></div>
+      <div id="tab-steps" class="hidden"></div>
+      <div id="tab-ingredients" class="hidden"></div>
+      <div id="tab-shopping" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SHEET: ADD/EDIT RECIPE ══════════════════ -->
+  <div id="sheet-recipe" class="sheet-overlay hidden" onclick="handleOverlayClick(event,'sheet-recipe')">
+    <div class="sheet-panel">
+      <div class="sheet-header">
+        <span class="playfair sheet-title" id="sheet-recipe-title">新增食譜</span>
+        <button class="sheet-close" onclick="closeSheet('sheet-recipe')">×</button>
+      </div>
+      <div class="sheet-body" id="sheet-recipe-body"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SHEET: ADD SESSION ══════════════════ -->
+  <div id="sheet-session" class="sheet-overlay hidden" onclick="handleOverlayClick(event,'sheet-session')">
+    <div class="sheet-panel">
+      <div class="sheet-header">
+        <span class="playfair sheet-title">新增嘗試紀錄</span>
+        <button class="sheet-close" onclick="closeSheet('sheet-session')">×</button>
+      </div>
+      <div class="sheet-body" id="sheet-session-body"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════════
+const MOODS = [
+  { score:1, emoji:'😢', label:'失敗' },
+  { score:2, emoji:'😕', label:'普通' },
+  { score:3, emoji:'🙂', label:'不錯' },
+  { score:4, emoji:'😄', label:'很好' },
+  { score:5, emoji:'🤤', label:'完美' },
+];
+const COVER_COLORS = ['#7A6050','#A03020','#3A6B45','#2B5278','#7B4A8A','#8A6A20','#4A6670','#A05030'];
+const CATEGORY_OPTS = ['麵包','料理','甜點','湯品','其他'];
+const CAT_STYLE = {
+  麵包:{ bg:'#F5EFE6', text:'#7A6050' },
+  料理:{ bg:'#F7EDEA', text:'#A03020' },
+  甜點:{ bg:'#EEF4EF', text:'#3A6B45' },
+  湯品:{ bg:'#EAF0F7', text:'#2B5278' },
+  其他:{ bg:'#F3EEF5', text:'#7B4A8A' },
+};
+const EMOJI_OPTS = ['🍞','🥐','🥖','🥨','🧁','🎂','🍰','🥧','🍅','🍗','🥩','🍜','🍲','🥘','🍛','🍵','🥗','🥚','🧆','🫕'];
+
+let recipes = [
+  {
+    id:1, title:'鄉村酸種麵包', category:'麵包', emoji:'🍞', coverColor:'#7A6050',
+    tags:['酸種','全麥','長時發酵'],
+    ingredients:[
+      {name:'高筋麵粉',amount:'400g'},{name:'全麥麵粉',amount:'100g'},
+      {name:'水',amount:'390g'},{name:'酸種 starter',amount:'100g'},{name:'鹽',amount:'10g'},
+    ],
+    steps:['混合麵粉與水，自我分解 30 分鐘','加入 starter，拌勻後加鹽','每 30 分鐘折疊一次，共 4 次','室溫發酵 4 小時後冷藏隔夜','取出整形，放入發酵籃','烤箱預熱 250°C，連鑄鐵鍋一起','蓋蓋烤 20 分鐘，開蓋再烤 25 分鐘'],
+    shopping:['高筋麵粉','全麥麵粉'],
+    sessions:[
+      {id:101,date:'2025-03-01',rating:4,roomTemp:24,doughTemp:26,fermentHours:4.5,note:'水量提高到 78%，氣孔比上次更漂亮！但烤色還可以再深一點。'},
+      {id:102,date:'2025-02-14',rating:2,roomTemp:20,doughTemp:22,fermentHours:5,note:'室溫偏低，發酵不足，麵包偏緊實。'},
+    ],
+  },
+  {
+    id:2, title:'番茄燉雞腿', category:'料理', emoji:'🍅', coverColor:'#A03020',
+    tags:['燉煮','番茄','家常'],
+    ingredients:[
+      {name:'雞腿',amount:'4 支'},{name:'番茄罐頭',amount:'400g'},
+      {name:'洋蔥',amount:'1 顆'},{name:'蒜頭',amount:'5 瓣'},{name:'魚露',amount:'1 大匙'},
+    ],
+    steps:['雞腿兩面煎至金黃','炒香洋蔥與蒜頭','加入番茄罐頭與魚露','小火燉 40 分鐘','收汁至濃稠'],
+    shopping:['雞腿','番茄罐頭'],
+    sessions:[
+      {id:201,date:'2025-02-24',rating:5,roomTemp:null,doughTemp:null,fermentHours:null,note:'加魚露提鮮，效果超好！下次試試加橄欖。'},
+    ],
+  },
+];
+
+// ── state ──
+let currentFilter = '全部';
+let selectedId = null;
+let activeTab = 'sessions';
+let editingRecipeId = null; // null = new, number = edit
+
+// draft objects (mutated in place by form)
+let recipeDraft = {};
+let sessionDraft = {};
+
+// ── per-tab edit state ──
+let tabEditState = { steps: false, ingredients: false, shopping: false };
+let tabLocalItems = { steps: [], ingredients: [], shopping: [] };
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+const fmtDate = iso => {
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+};
+const todayISO = () => new Date().toISOString().slice(0,10);
+const mood = score => MOODS.find(m => m.score === score) || MOODS[2];
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const getRecipe = id => recipes.find(r => r.id === id);
+const blankRecipe = () => ({
+  id: Date.now(), title:'', category:'麵包', emoji:'🍞',
+  coverColor: COVER_COLORS[0], tags:[], ingredients:[{name:'',amount:''}],
+  steps:[''], shopping:[''], sessions:[],
+});
+
+function updateRecipe(id, patch) {
+  recipes = recipes.map(r => r.id === id ? { ...r, ...patch } : r);
+}
+
+// ══════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + name);
+  el.classList.add('active');
+  el.classList.add('fade-in');
+  setTimeout(() => el.classList.remove('fade-in'), 400);
+}
+
+function goHome() {
+  showScreen('home');
+  renderHome();
+}
+
+function openDetail(id) {
+  selectedId = id;
+  activeTab = 'sessions';
+  renderDetail();
+  showScreen('detail');
+}
+
+// ══════════════════════════════════════════════
+//  FILTER
+// ══════════════════════════════════════════════
+function setFilter(cat) {
+  currentFilter = cat;
+  renderFilterBar();
+  renderRecipeList();
+}
+
+function renderFilterBar() {
+  const bar = document.getElementById('filter-bar');
+  const cats = ['全部', ...CATEGORY_OPTS];
+  bar.innerHTML = cats.map(cat => `
+    <button class="btn-pill ${cat === currentFilter ? 'active' : 'inactive'}" onclick="setFilter('${esc(cat)}')">${esc(cat)}</button>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════
+//  HOME RENDER
+// ══════════════════════════════════════════════
+function renderHome() {
+  renderFilterBar();
+  renderRecipeList();
+}
+
+function renderRecipeList() {
+  const list = document.getElementById('recipe-list');
+  const filtered = currentFilter === '全部' ? recipes : recipes.filter(r => r.category === currentFilter);
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty-state">還沒有食譜，點右上角 ＋ 新增吧！</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(recipe => {
+    const latest = recipe.sessions[0];
+    const cs = CAT_STYLE[recipe.category] || CAT_STYLE['其他'];
+    const m = latest ? mood(latest.rating) : null;
+    const metaDate = latest ? `<span>🕐 ${esc(fmtDate(latest.date))}</span>` : '';
+    const metaTemp = (latest && latest.roomTemp) ? `<span class="dot-sep">·</span><span>🌡 ${latest.roomTemp}°C</span>` : '';
+    const noteText = latest && latest.note ? (latest.note.length > 70 ? latest.note.slice(0,70)+'…' : latest.note) : '';
+    const moodHTML = m ? `<div class="card-mood-emoji">${m.emoji}</div><div class="card-mood-label">${esc(m.label)}</div>` : '';
+
+    return `
+    <div class="swipe-wrapper" data-id="${recipe.id}">
+      <div class="swipe-actions">
+        <div class="swipe-action-left" onclick="duplicateRecipe(${recipe.id})">
+          <span style="font-size:20px">📋</span>
+          <span class="swipe-action-label">複製</span>
+        </div>
+        <div class="swipe-action-right" onclick="deleteRecipe(${recipe.id})">
+          <span style="font-size:20px">🗑</span>
+          <span class="swipe-action-label">刪除</span>
+        </div>
+      </div>
+      <div class="swipe-card" data-id="${recipe.id}" onclick="openDetail(${recipe.id})">
+        <div class="card-cover" style="background:${esc(recipe.coverColor)}">
+          <div class="card-cover-emoji">${esc(recipe.emoji)}</div>
+          <div class="card-cover-right">
+            <div class="card-count-badge">${recipe.sessions.length} 次</div>
+            ${moodHTML}
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="flex justify-between items-center" style="margin-bottom:8px;gap:8px">
+            <div class="playfair card-title">${esc(recipe.title)}</div>
+            <span class="card-cat-badge" style="background:${cs.bg};color:${cs.text}">${esc(recipe.category)}</span>
+          </div>
+          <div class="card-meta">${metaDate}${metaTemp}</div>
+          ${noteText ? `<div class="card-note">${esc(noteText)}</div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // attach swipe listeners
+  document.querySelectorAll('.swipe-wrapper').forEach(wrapper => {
+    const card = wrapper.querySelector('.swipe-card');
+    let startX = null, currentOffset = 0;
+
+    const move = offset => {
+      currentOffset = offset;
+      card.style.transition = 'none';
+      card.style.transform = `translateX(${offset}px)`;
+    };
+    const snap = () => {
+      card.style.transition = 'transform 0.3s cubic-bezier(.2,.8,.3,1)';
+      if (currentOffset < -50) { card.style.transform = 'translateX(-80px)'; currentOffset = -80; }
+      else if (currentOffset > 50) { card.style.transform = 'translateX(80px)'; currentOffset = 80; }
+      else { card.style.transform = 'translateX(0)'; currentOffset = 0; }
+    };
+    const reset = () => {
+      card.style.transition = 'transform 0.3s cubic-bezier(.2,.8,.3,1)';
+      card.style.transform = 'translateX(0)';
+      currentOffset = 0;
+    };
+
+    card.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive:true });
+    card.addEventListener('touchmove', e => {
+      if (startX === null) return;
+      const dx = e.touches[0].clientX - startX;
+      move(Math.max(-90, Math.min(90, dx)));
+    }, { passive:true });
+    card.addEventListener('touchend', () => { snap(); startX = null; });
+
+    // Also reset when action buttons are clicked
+    wrapper.querySelectorAll('.swipe-action-left, .swipe-action-right').forEach(btn => {
+      btn.addEventListener('click', () => setTimeout(reset, 200));
+    });
+  });
+}
+
+// ══════════════════════════════════════════════
+//  RECIPE CRUD
+// ══════════════════════════════════════════════
+function deleteRecipe(id) {
+  if (!confirm('確定要刪除這個食譜嗎？')) return;
+  recipes = recipes.filter(r => r.id !== id);
+  renderRecipeList();
+}
+
+function duplicateRecipe(id) {
+  const src = getRecipe(id);
+  if (!src) return;
+  const copy = { ...JSON.parse(JSON.stringify(src)), id: Date.now(), title: src.title + ' (副本)', sessions: [] };
+  recipes = [copy, ...recipes];
+  renderRecipeList();
+}
+
+// ══════════════════════════════════════════════
+//  DETAIL RENDER
+// ══════════════════════════════════════════════
+function renderDetail() {
+  const r = getRecipe(selectedId);
+  if (!r) return;
+
+  document.getElementById('detail-hero').style.background = r.coverColor;
+  document.getElementById('detail-emoji').textContent = r.emoji;
+  document.getElementById('detail-title').textContent = r.title;
+  document.getElementById('detail-count').textContent = `${r.sessions.length} 次嘗試紀錄`;
+  document.getElementById('detail-tags').innerHTML = r.tags.map(t => `<span class="detail-tag">#${esc(t)}</span>`).join('');
+
+  // reset tab buttons
+  document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.btn-tab[data-tab="${activeTab}"]`).classList.add('active');
+
+  renderActiveTab();
+}
+
+function switchTab(tab, btn) {
+  activeTab = tab;
+  document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ['sessions','steps','ingredients','shopping'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
+  });
+  renderActiveTab();
+}
+
+function renderActiveTab() {
+  ['sessions','steps','ingredients','shopping'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('hidden', t !== activeTab);
+  });
+  if (activeTab === 'sessions') renderSessionsTab();
+  if (activeTab === 'steps') renderEditableTab('steps');
+  if (activeTab === 'ingredients') renderEditableTab('ingredients');
+  if (activeTab === 'shopping') renderEditableTab('shopping');
+}
+
+// ══════════════════════════════════════════════
+//  SESSIONS TAB
+// ══════════════════════════════════════════════
+function renderSessionsTab() {
+  const r = getRecipe(selectedId);
+  const container = document.getElementById('tab-sessions');
+
+  const sessionsHTML = r.sessions.length === 0
+    ? '<div class="empty-state">還沒有嘗試紀錄</div>'
+    : r.sessions.map((s, i) => {
+        const m = mood(s.rating);
+        const isLatest = i === 0;
+        const badgeHTML = isLatest ? `<span class="session-badge" style="background:${r.coverColor}">最新</span>` : '';
+        const tempHTML = (s.roomTemp || s.doughTemp || s.fermentHours) ? `
+          <div class="temp-chips">
+            ${s.roomTemp ? `<div class="temp-chip"><div class="temp-chip-label">室內</div><div class="temp-chip-value">${s.roomTemp}°C</div></div>` : ''}
+            ${s.doughTemp ? `<div class="temp-chip"><div class="temp-chip-label">麵團</div><div class="temp-chip-value">${s.doughTemp}°C</div></div>` : ''}
+            ${s.fermentHours ? `<div class="temp-chip"><div class="temp-chip-label">發酵</div><div class="temp-chip-value">${s.fermentHours}h</div></div>` : ''}
+          </div>` : '';
+        return `
+        <div class="session-card" style="border-left-color:${isLatest ? r.coverColor : '#EDE8DF'}">
+          <div class="session-header">
+            <div>
+              <div class="session-meta">
+                ${badgeHTML}
+                <span>🕐 ${esc(fmtDate(s.date))}</span>
+                <span class="dot-sep">·</span>
+                <span>第 ${r.sessions.length - i} 次</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-8">
+              <div class="session-mood">
+                <div class="session-mood-emoji">${m.emoji}</div>
+                <div class="session-mood-label">${esc(m.label)}</div>
+              </div>
+              <button class="btn-icon" onclick="deleteSession(${s.id})">✕</button>
+            </div>
+          </div>
+          ${tempHTML}
+          <div class="session-note ${s.note ? '' : 'empty'}">${s.note ? esc(s.note) : '沒有留下筆記'}</div>
+        </div>`;
+      }).join('');
+
+  container.innerHTML = `
+    <button class="btn-dashed" style="margin-bottom:20px" onclick="openAddSessionSheet()">
+      <span style="font-size:18px">＋</span> 新增這次的嘗試
+    </button>
+    ${sessionsHTML}
+  `;
+}
+
+function deleteSession(sid) {
+  const r = getRecipe(selectedId);
+  updateRecipe(selectedId, { sessions: r.sessions.filter(s => s.id !== sid) });
+  renderSessionsTab();
+}
+
+// ══════════════════════════════════════════════
+//  EDITABLE TABS (steps / ingredients / shopping)
+// ══════════════════════════════════════════════
+function renderEditableTab(tabKey) {
+  const r = getRecipe(selectedId);
+  const container = document.getElementById('tab-' + tabKey);
+  const editing = tabEditState[tabKey];
+  const items = editing ? tabLocalItems[tabKey] : r[tabKey];
+
+  const titleMap = { steps:'步驟', ingredients:'材料', shopping:'採購清單' };
+
+  const editBtns = editing
+    ? `<div class="edit-list-actions">
+        <button class="btn-sm cancel" onclick="cancelTabEdit('${tabKey}')">取消</button>
+        <button class="btn-sm save" onclick="saveTabEdit('${tabKey}')">儲存</button>
+       </div>`
+    : `<button class="btn-sm edit-trigger" onclick="startTabEdit('${tabKey}')">✏️ 編輯</button>`;
+
+  let viewHTML = '';
+  let editHTML = '';
+
+  if (tabKey === 'steps') {
+    viewHTML = items.map((s, i) => `
+      <div class="view-list-item">
+        <div class="step-row">
+          <div class="step-num" style="background:${r.coverColor}">${i+1}</div>
+          <div class="step-text">${esc(s)}</div>
+        </div>
+      </div>`).join('');
+    editHTML = items.map((s, i) => `
+      <div class="edit-row">
+        <div class="step-form-num" style="background:${r.coverColor}">${i+1}</div>
+        <textarea rows="2" oninput="updateTabItem('steps',${i},this.value)">${esc(s)}</textarea>
+        <button class="btn-icon" onclick="removeTabItem('steps',${i})">✕</button>
+      </div>`).join('') +
+      `<button class="btn-dashed" style="padding:9px;font-size:13px" onclick="addTabItem('steps','')">＋ 新增步驟</button>`;
+  }
+
+  if (tabKey === 'ingredients') {
+    viewHTML = items.map(ing => `
+      <div class="view-list-item">
+        <div class="ing-row">
+          <span class="ing-name">${esc(ing.name)}</span>
+          <span class="ing-amount">${esc(ing.amount)}</span>
+        </div>
+      </div>`).join('');
+    editHTML = items.map((ing, i) => `
+      <div class="edit-row">
+        <input value="${esc(ing.name)}" placeholder="名稱" oninput="updateTabIngName(${i},this.value)" style="flex:1">
+        <input value="${esc(ing.amount)}" placeholder="份量" oninput="updateTabIngAmount(${i},this.value)" style="width:80px;flex:none">
+        <button class="btn-icon" onclick="removeTabItem('ingredients',${i})">✕</button>
+      </div>`).join('') +
+      `<button class="btn-dashed" style="padding:9px;font-size:13px" onclick="addTabItem('ingredients',{name:'',amount:''})">＋ 新增材料</button>`;
+  }
+
+  if (tabKey === 'shopping') {
+    viewHTML = items.map(item => `
+      <div class="view-list-item">
+        <div class="shop-row">
+          <div class="shop-check" style="border:2px solid ${r.coverColor}"></div>
+          <span style="font-size:14px;color:#3D2E1E">${esc(item)}</span>
+        </div>
+      </div>`).join('');
+    editHTML = items.map((item, i) => `
+      <div class="edit-row">
+        <input value="${esc(item)}" placeholder="食材名稱" oninput="updateTabItem('shopping',${i},this.value)" style="flex:1">
+        <button class="btn-icon" onclick="removeTabItem('shopping',${i})">✕</button>
+      </div>`).join('') +
+      `<button class="btn-dashed" style="padding:9px;font-size:13px" onclick="addTabItem('shopping','')">＋ 新增食材</button>`;
+  }
+
+  container.innerHTML = `
+    <div class="edit-list-header">
+      <span class="label-sm" style="margin-bottom:0">${titleMap[tabKey]}</span>
+      ${editBtns}
+    </div>
+    ${!editing ? `<div class="view-list">${viewHTML}</div>` : ''}
+    ${editing ? `<div class="edit-list-inputs">${editHTML}</div>` : ''}
+  `;
+}
+
+function startTabEdit(tabKey) {
+  const r = getRecipe(selectedId);
+  tabLocalItems[tabKey] = JSON.parse(JSON.stringify(r[tabKey]));
+  tabEditState[tabKey] = true;
+  renderEditableTab(tabKey);
+}
+function cancelTabEdit(tabKey) {
+  tabEditState[tabKey] = false;
+  renderEditableTab(tabKey);
+}
+function saveTabEdit(tabKey) {
+  let items = tabLocalItems[tabKey];
+  if (tabKey === 'steps' || tabKey === 'shopping') {
+    items = items.filter(i => String(i).trim());
+  } else {
+    items = items.filter(i => i.name && i.name.trim());
+  }
+  updateRecipe(selectedId, { [tabKey]: items });
+  tabEditState[tabKey] = false;
+  renderEditableTab(tabKey);
+}
+function updateTabItem(tabKey, idx, val) {
+  tabLocalItems[tabKey][idx] = val;
+}
+function updateTabIngName(idx, val) {
+  tabLocalItems['ingredients'][idx].name = val;
+}
+function updateTabIngAmount(idx, val) {
+  tabLocalItems['ingredients'][idx].amount = val;
+}
+function removeTabItem(tabKey, idx) {
+  tabLocalItems[tabKey].splice(idx, 1);
+  renderEditableTab(tabKey);
+}
+function addTabItem(tabKey, newVal) {
+  tabLocalItems[tabKey].push(typeof newVal === 'string' ? newVal : {...newVal});
+  renderEditableTab(tabKey);
+}
+
+// ══════════════════════════════════════════════
+//  SHEET: ADD/EDIT RECIPE
+// ══════════════════════════════════════════════
+function openAddRecipeSheet() {
+  editingRecipeId = null;
+  recipeDraft = blankRecipe();
+  renderRecipeSheet('新增食譜', '建立食譜');
+  openSheet('sheet-recipe');
+}
+function openEditRecipeSheet() {
+  const r = getRecipe(selectedId);
+  editingRecipeId = selectedId;
+  recipeDraft = JSON.parse(JSON.stringify(r));
+  renderRecipeSheet('編輯食譜', '儲存修改');
+  openSheet('sheet-recipe');
+}
+
+function renderRecipeSheet(title, saveLabel) {
+  document.getElementById('sheet-recipe-title').textContent = title;
+  const body = document.getElementById('sheet-recipe-body');
+
+  body.innerHTML = `
+    <!-- emoji -->
+    <div class="sheet-section">
+      <span class="label-sm">封面圖示</span>
+      <div class="emoji-grid" id="rform-emoji-grid">${EMOJI_OPTS.map(e =>
+        `<button class="emoji-btn ${recipeDraft.emoji===e?'selected':''}" onclick="setDraftEmoji('${e}')">${e}</button>`
+      ).join('')}</div>
+    </div>
+
+    <!-- color -->
+    <div class="sheet-section">
+      <span class="label-sm">封面顏色</span>
+      <div class="color-grid" id="rform-color-grid">${COVER_COLORS.map(c =>
+        `<button class="color-swatch ${recipeDraft.coverColor===c?'selected':''}" style="background:${c}" onclick="setDraftColor('${c}')"></button>`
+      ).join('')}</div>
+    </div>
+
+    <!-- title -->
+    <div class="sheet-section">
+      <span class="label-sm">食譜名稱</span>
+      <input class="input-full" id="rform-title" value="${esc(recipeDraft.title)}" placeholder="e.g. 鄉村酸種麵包" oninput="recipeDraft.title=this.value;updateSaveBtn()">
+    </div>
+
+    <!-- category -->
+    <div class="sheet-section">
+      <span class="label-sm">分類</span>
+      <div class="cat-picker" id="rform-cat">${CATEGORY_OPTS.map(cat =>
+        `<button class="cat-btn ${recipeDraft.category===cat?'selected':'unselected'}" onclick="setDraftCat('${cat}')">${cat}</button>`
+      ).join('')}</div>
+    </div>
+
+    <!-- tags -->
+    <div class="sheet-section">
+      <span class="label-sm">標籤（選填）</span>
+      <div class="tag-list" id="rform-tags"></div>
+      <div class="tag-input-row">
+        <input id="rform-tag-input" placeholder="輸入標籤後按 Enter" onkeydown="if(event.key==='Enter')addDraftTag()" style="flex:1">
+        <button class="btn-add-tag" onclick="addDraftTag()">加入</button>
+      </div>
+    </div>
+
+    <!-- ingredients -->
+    <div class="sheet-section">
+      <span class="label-sm">材料</span>
+      <div id="rform-ingredients"></div>
+    </div>
+
+    <!-- steps -->
+    <div class="sheet-section">
+      <span class="label-sm">步驟</span>
+      <div id="rform-steps"></div>
+    </div>
+
+    <!-- shopping -->
+    <div class="sheet-section">
+      <span class="label-sm">採購清單（選填）</span>
+      <div id="rform-shopping"></div>
+    </div>
+
+    <button class="btn-dark" id="rform-save-btn" onclick="saveRecipeDraft()">${esc(saveLabel)}</button>
+  `;
+
+  renderDraftTags();
+  renderDraftIngredients();
+  renderDraftSteps();
+  renderDraftShopping();
+  updateSaveBtn();
+}
+
+function updateSaveBtn() {
+  const btn = document.getElementById('rform-save-btn');
+  if (btn) btn.style.background = recipeDraft.title.trim() ? '#241A10' : '#C8BDB0';
+}
+
+function setDraftEmoji(e) {
+  recipeDraft.emoji = e;
+  document.querySelectorAll('#rform-emoji-grid .emoji-btn').forEach(b => {
+    b.classList.toggle('selected', b.textContent === e);
+  });
+  refreshStepNums();
+}
+function setDraftColor(c) {
+  recipeDraft.coverColor = c;
+  document.querySelectorAll('#rform-color-grid .color-swatch').forEach(b => {
+    b.classList.toggle('selected', b.style.background === c || b.style.backgroundColor === c);
+  });
+  refreshStepNums();
+}
+function setDraftCat(cat) {
+  recipeDraft.category = cat;
+  document.querySelectorAll('#rform-cat .cat-btn').forEach(b => {
+    b.classList.toggle('selected', b.textContent === cat);
+    b.classList.toggle('unselected', b.textContent !== cat);
+  });
+}
+
+function renderDraftTags() {
+  const el = document.getElementById('rform-tags');
+  if (!el) return;
+  el.innerHTML = recipeDraft.tags.map(t => `
+    <span class="tag-chip">#${esc(t)}<button class="tag-remove" onclick="removeDraftTag('${esc(t)}')">×</button></span>
+  `).join('');
+}
+function addDraftTag() {
+  const inp = document.getElementById('rform-tag-input');
+  const t = inp.value.trim();
+  if (t && !recipeDraft.tags.includes(t)) { recipeDraft.tags.push(t); renderDraftTags(); }
+  inp.value = '';
+}
+function removeDraftTag(t) {
+  recipeDraft.tags = recipeDraft.tags.filter(x => x !== t);
+  renderDraftTags();
+}
+
+function renderDraftIngredients() {
+  const el = document.getElementById('rform-ingredients');
+  if (!el) return;
+  el.innerHTML = recipeDraft.ingredients.map((ing, i) => `
+    <div class="edit-row" style="margin-bottom:8px">
+      <input value="${esc(ing.name)}" placeholder="名稱" oninput="recipeDraft.ingredients[${i}].name=this.value" style="flex:1">
+      <input value="${esc(ing.amount)}" placeholder="份量" oninput="recipeDraft.ingredients[${i}].amount=this.value" style="width:80px;flex:none">
+      <button class="btn-icon" onclick="removeDraftIng(${i})">✕</button>
+    </div>`).join('') +
+    `<button class="btn-dashed" style="padding:9px;font-size:13px" onclick="addDraftIng()">＋ 新增材料</button>`;
+}
+function removeDraftIng(i) { recipeDraft.ingredients.splice(i,1); renderDraftIngredients(); }
+function addDraftIng() { recipeDraft.ingredients.push({name:'',amount:''}); renderDraftIngredients(); }
+
+function renderDraftSteps() {
+  const el = document.getElementById('rform-steps');
+  if (!el) return;
+  el.innerHTML = recipeDraft.steps.map((s, i) => `
+    <div class="step-form-row" style="margin-bottom:8px">
+      <div class="step-form-num" style="background:${recipeDraft.coverColor}">${i+1}</div>
+      <textarea rows="2" oninput="recipeDraft.steps[${i}]=this.value">${esc(s)}</textarea>
+      <button class="btn-icon" onclick="removeDraftStep(${i})">✕</button>
+    </div>`).join('') +
+    `<button class="btn-dashed" style="padding:9px;font-size:13px" onclick="addDraftStep()">＋ 新增步驟</button>`;
+}
+function removeDraftStep(i) { recipeDraft.steps.splice(i,1); renderDraftSteps(); }
+function addDraftStep() { recipeDraft.steps.push(''); renderDraftSteps(); }
+function refreshStepNums() { renderDraftSteps(); }
+
+function renderDraftShopping() {
+  const el = document.getElementById('rform-shopping');
+  if (!el) return;
+  el.innerHTML = recipeDraft.shopping.map((item, i) => `
+    <div class="edit-row" style="margin-bottom:8px">
+      <input value="${esc(item)}" placeholder="食材名稱" oninput="recipeDraft.shopping[${i}]=this.value" style="flex:1">
+      <button class="btn-icon" onclick="removeDraftShop(${i})">✕</button>
+    </div>`).join('') +
+    `<button class="btn-dashed" style="padding:9px;font-size:13px" onclick="addDraftShop()">＋ 新增食材</button>`;
+}
+function removeDraftShop(i) { recipeDraft.shopping.splice(i,1); renderDraftShopping(); }
+function addDraftShop() { recipeDraft.shopping.push(''); renderDraftShopping(); }
+
+function saveRecipeDraft() {
+  if (!recipeDraft.title.trim()) return;
+  if (editingRecipeId) {
+    updateRecipe(editingRecipeId, recipeDraft);
+    closeSheet('sheet-recipe');
+    renderDetail();
+  } else {
+    recipes = [{ ...recipeDraft, id: Date.now() }, ...recipes];
+    closeSheet('sheet-recipe');
+    renderRecipeList();
+  }
+}
+
+// ══════════════════════════════════════════════
+//  SHEET: ADD SESSION
+// ══════════════════════════════════════════════
+function openAddSessionSheet() {
+  const r = getRecipe(selectedId);
+  sessionDraft = { note:'', rating:4, roomTemp:'', doughTemp:'', fermentHours:'' };
+  renderSessionSheet(r);
+  openSheet('sheet-session');
+}
+
+function renderSessionSheet(r) {
+  const body = document.getElementById('sheet-session-body');
+  const isBread = r.category === '麵包';
+
+  body.innerHTML = `
+    <!-- mood -->
+    <div class="sheet-section">
+      <span class="label-sm">這次感覺如何？</span>
+      <div class="mood-picker" id="sform-mood">
+        ${MOODS.map(m => `
+          <button class="mood-btn ${sessionDraft.rating===m.score?'selected':''}"
+            style="${sessionDraft.rating===m.score?`background:${r.coverColor}`:''}"
+            onclick="setSessionMood(${m.score},'${r.coverColor}')">
+            <span class="mood-btn-emoji">${m.emoji}</span>
+            <span class="mood-btn-label">${esc(m.label)}</span>
+          </button>`).join('')}
+      </div>
+    </div>
+
+    <!-- env (bread only) -->
+    ${isBread ? `
+    <div class="sheet-section">
+      <span class="label-sm">環境條件</span>
+      <div class="env-fields">
+        <div class="env-field">
+          <label>室內溫度 °C</label>
+          <input type="number" placeholder="—" oninput="sessionDraft.roomTemp=this.value">
+        </div>
+        <div class="env-field">
+          <label>麵團溫度 °C</label>
+          <input type="number" placeholder="—" oninput="sessionDraft.doughTemp=this.value">
+        </div>
+        <div class="env-field">
+          <label>發酵時間 h</label>
+          <input type="number" placeholder="—" oninput="sessionDraft.fermentHours=this.value">
+        </div>
+      </div>
+    </div>` : ''}
+
+    <!-- note -->
+    <div class="sheet-section">
+      <span class="label-sm">心得與調整筆記</span>
+      <textarea rows="5" placeholder="這次有什麼發現？下次想改什麼？"
+        oninput="sessionDraft.note=this.value"
+        style="width:100%;padding:14px;border-radius:14px;font-size:14px;line-height:1.7;box-sizing:border-box"></textarea>
+    </div>
+
+    <button class="btn-dark" style="background:${r.coverColor}" onclick="saveSessionDraft()">儲存紀錄</button>
+  `;
+}
+
+function setSessionMood(score, color) {
+  sessionDraft.rating = score;
+  document.querySelectorAll('#sform-mood .mood-btn').forEach((btn, i) => {
+    const s = MOODS[i].score;
+    btn.classList.toggle('selected', s === score);
+    btn.style.background = s === score ? color : '';
+    btn.querySelector('.mood-btn-label').style.color = s === score ? '#fff' : '#9B8878';
+  });
+}
+
+function saveSessionDraft() {
+  const s = {
+    id: Date.now(), date: todayISO(), rating: sessionDraft.rating,
+    roomTemp: sessionDraft.roomTemp ? +sessionDraft.roomTemp : null,
+    doughTemp: sessionDraft.doughTemp ? +sessionDraft.doughTemp : null,
+    fermentHours: sessionDraft.fermentHours ? +sessionDraft.fermentHours : null,
+    note: sessionDraft.note,
+  };
+  const r = getRecipe(selectedId);
+  updateRecipe(selectedId, { sessions: [s, ...r.sessions] });
+  closeSheet('sheet-session');
+  renderSessionsTab();
+  // update detail hero count
+  const updated = getRecipe(selectedId);
+  document.getElementById('detail-count').textContent = `${updated.sessions.length} 次嘗試紀錄`;
+}
+
+// ══════════════════════════════════════════════
+//  SHEET HELPERS
+// ══════════════════════════════════════════════
+function openSheet(id) {
+  document.getElementById(id).classList.remove('hidden');
+}
+function closeSheet(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+function handleOverlayClick(e, id) {
+  if (e.target === e.currentTarget) closeSheet(id);
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+renderHome();
+</script>
+</body>
+</html>
