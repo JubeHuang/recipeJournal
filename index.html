@@ -282,8 +282,14 @@
   .ing-amount { font-size: 14px; color: #9B8878; font-weight: 600; }
 
   /* ── shopping item ── */
-  .shop-row { display: flex; align-items: center; gap: 12px; }
-  .shop-check { width: 18px; height: 18px; border-radius: 5px; flex-shrink: 0; }
+  .shop-row { display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
+  .shop-check {
+    width: 20px; height: 20px; border-radius: 5px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; transition: background 0.15s;
+  }
+  .shop-check.checked { color: #fff; }
+  .shop-row.checked > span { text-decoration: line-through; color: #B0A090; }
 
   /* ── sheet overlay ── */
   .sheet-overlay {
@@ -535,14 +541,19 @@ let tabEditState = { steps:false, ingredients:false, shopping:false };
 let tabLocalItems = { steps:[], ingredients:[], shopping:[] };
 
 const STORAGE_KEY = 'recipe-journal-data-v2';
+let shopChecked = {}; // { recipeId: { itemIndex: bool } } — session-only, not persisted
 
 function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ recipes, currentFilter, selectedId, activeTab, editingRecipeId }));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ recipes, currentFilter, selectedId, activeTab, editingRecipeId }));
+  } catch(e) {
+    // localStorage unavailable in sandbox — data lives in memory only
+  }
 }
 function loadData() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return;
   try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
     const d = JSON.parse(raw);
     if (Array.isArray(d.recipes)) recipes = d.recipes;
     if (d.currentFilter) currentFilter = d.currentFilter;
@@ -918,7 +929,15 @@ function renderEditableTab(tabKey) {
       +`<button class="btn-dashed" style="padding:9px;font-size:13px" onclick="addTabItem('ingredients',{name:'',amount:''})">＋ 新增材料</button>`;
   }
   if (tabKey==='shopping') {
-    viewHTML=items.map(item=>`<div class="view-list-item"><div class="shop-row"><div class="shop-check" style="border:2px solid ${r.coverColor}"></div><span style="font-size:14px;color:#3D2E1E">${esc(item)}</span></div></div>`).join('');
+    viewHTML=items.map((item,i)=>{
+      const checked=(shopChecked[selectedId]||{})[i]||false;
+      return `<div class="view-list-item">
+        <div class="shop-row${checked?' checked':''}" onclick="toggleShopCheck(${i})">
+          <div class="shop-check${checked?' checked':''}" style="border:2px solid ${r.coverColor};background:${checked?r.coverColor:'transparent'}">${checked?'✓':''}</div>
+          <span style="font-size:14px;color:${checked?'#B0A090':'#3D2E1E'};${checked?'text-decoration:line-through':''}">${esc(item)}</span>
+        </div>
+      </div>`;
+    }).join('');
     editHTML=items.map((item,i)=>`<div class="edit-row"><input value="${esc(item)}" placeholder="食材名稱" oninput="updateTabItem('shopping',${i},this.value)" style="flex:1"><button class="btn-icon" onclick="removeTabItem('shopping',${i})">✕</button></div>`).join('')
       +`<button class="btn-dashed" style="padding:9px;font-size:13px" onclick="addTabItem('shopping','')">＋ 新增食材</button>`;
   }
@@ -928,6 +947,11 @@ function renderEditableTab(tabKey) {
     </div>
     ${!editing?`<div class="view-list">${viewHTML}</div>`:''}
     ${editing?`<div class="edit-list-inputs">${editHTML}</div>`:''}`;
+}
+function toggleShopCheck(idx) {
+  if (!shopChecked[selectedId]) shopChecked[selectedId] = {};
+  shopChecked[selectedId][idx] = !shopChecked[selectedId][idx];
+  renderEditableTab('shopping');
 }
 function startTabEdit(k){tabLocalItems[k]=JSON.parse(JSON.stringify(getRecipe(selectedId)[k]));tabEditState[k]=true;renderEditableTab(k);}
 function cancelTabEdit(k){tabEditState[k]=false;renderEditableTab(k);}
